@@ -23,15 +23,21 @@ public class WhatsappController {
     WhatsappService whatsappService = new WhatsappService();
 
     @PostMapping("/add-user")
-    public String createUser(String name, String mobile) throws Exception {
+    public String createUser(@RequestParam("name") String name,@RequestParam("mobile") String mobile) throws Exception {
         //If the mobile number exists in database, throw "User already exists" exception
         //Otherwise, create the user and return "SUCCESS"
-
-        return whatsappService.createUser(name, mobile);
+         String s="";
+        s= whatsappService.createUser(name, mobile);
+        if(s.equals("null"))
+        {
+            throw new Exception("User already exists");
+        }
+        else
+            return "SUCCESS";
     }
 
     @PostMapping("/add-group")
-    public Group createGroup(List<User> users){
+    public Group createGroup(@RequestBody() List<User> users){
         // The list contains at least 2 users where the first user is the admin. A group has exactly one admin.
         // If there are only 2 users, the group is a personal chat and the group name should be kept as the name of the second user(other than admin)
         // If there are 2+ users, the name of group should be "Group count". For example, the name of first group would be "Group 1", second would be "Group 2" and so on.
@@ -45,7 +51,7 @@ public class WhatsappController {
     }
 
     @PostMapping("/add-message")
-    public int createMessage(String content){
+    public int createMessage(@RequestParam("content") String content){
         // The 'i^th' created message has message id 'i'.
         // Return the message id.
 
@@ -53,21 +59,47 @@ public class WhatsappController {
     }
 
     @PutMapping("/send-message")
-    public int sendMessage(Message message, User sender, Group group) throws Exception{
+    public int sendMessage(@RequestBody() Message message,@RequestBody() User sender,@RequestBody() Group group) throws Exception{
         //Throw "Group does not exist" if the mentioned group does not exist
         //Throw "You are not allowed to send message" if the sender is not a member of the group
         //If the message is sent successfully, return the final number of messages in that group.
 
-        return whatsappService.sendMessage(message, sender, group);
+        int val= whatsappService.sendMessage(message, sender, group);
+        if(val==-1)
+        {
+            throw new Exception("Group does not exist");
+        }
+        else if(val==-2)
+        {
+            throw new Exception("You are not allowed to send message");
+        }
+        else
+            return val;
+
     }
     @PutMapping("/change-admin")
-    public String changeAdmin(User approver, User user, Group group) throws Exception{
+    public String changeAdmin(@RequestBody() User approver,@RequestBody() User user,@RequestBody() Group group) throws Exception{
         //Throw "Group does not exist" if the mentioned group does not exist
         //Throw "Approver does not have rights" if the approver is not the current admin of the group
         //Throw "User is not a participant" if the user is not a part of the group
         //Change the admin of the group to "user" and return "SUCCESS". Note that at one time there is only one admin and the admin rights are transferred from approver to user.
 
-        return whatsappService.changeAdmin(approver, user, group);
+         String s=whatsappService.changeAdmin(approver, user, group);
+         if(s.equals("Not_Exist"))
+         {
+             throw new Exception("Group does not exist");
+         }
+         else if(s.equals("Not_participant"))
+         {
+             throw new Exception("User is not a participant");
+         }
+         else if(s.equals("not have rights"))
+         {
+             throw new Exception("Approver does not have rights");
+         }
+         else
+             return "SUCCESS";
+
     }
 
     @DeleteMapping("/remove-user")
